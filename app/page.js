@@ -1,102 +1,94 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from './page.module.css'
+"use client"
 
-const inter = Inter({ subsets: ['latin'] })
+import { useState, useEffect } from "react"
 
 export default function Home() {
+  const [input, setInput] = useState("")
+  const [todos, setTodos] = useState([])
+
+  // on mount, get todos from localStorage or set to empty array it no todos
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const localTodos = localStorage.getItem("todos")
+      setTodos(localTodos ? JSON.parse(localTodos) : [])
+    }
+  }, [])
+
+  // on todos change, save to localStorage
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos))
+    document.getElementById("todo-input").focus()
+  }, [todos])
+
+  // add new todo - spread existing todos and add new object
+  function addTodo(e) {
+    e.preventDefault()
+    if (!input) return
+    setTodos((currentTodos) => {
+      return [
+        ...currentTodos,
+        {
+          id: crypto.randomUUID(),
+          title: input,
+          completed: false,
+        },
+      ]
+    })
+    setInput("")
+  }
+
+  // delete todo - filter out the todo with the id
+  function deleteTodo(id) {
+    setTodos((currentTodos) => {
+      return currentTodos.filter((todo) => todo.id != id)
+    })
+  }
+
+  // toggle completed - map over todos and update the one with the id
+  function toggleCompleted(id, completed) {
+    setTodos((currentTodos) => {
+      return currentTodos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, completed }
+        }
+        return todo
+      })
+    })
+  }
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <>
+      <h1>Todos</h1>
+      <p>
+        This uses localStorage to keep your todos. No data is being passed
+        anywhere. it's just on your phone or computer.
+      </p>
+      <form onSubmit={addTodo}>
+        <input
+          type="input"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          id="todo-input"
+          autoComplete="off"
         />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+        <button type="submit">Add</button>
+      </form>
+      <ul>
+        {todos?.length === 0 && <li>No todos yet</li>}
+        {todos?.map((todo) => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={(e) => {
+                toggleCompleted(todo.id, e.target.checked)
+              }}
+            />
+            {todo.title}
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
