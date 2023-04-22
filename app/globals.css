@@ -53,3 +53,15 @@ body {
 a {
   color: hotpink;
 }
+
+@media (max-width: 600px) {
+  .code {
+    font-size: 0.7rem;
+  }
+  .container {
+    padding: 0 0.5rem;
+  }
+  .header {
+    padding: 0.5rem 0.5rem;
+  }
+}
